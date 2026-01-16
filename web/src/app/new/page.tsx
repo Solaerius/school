@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3100";
+import { getApiBase } from "../../lib/apiBase";
 
 export default function NewCardPage() {
   const [title, setTitle] = useState("");
@@ -21,6 +20,7 @@ export default function NewCardPage() {
 
     setSaving(true);
     try {
+      const apiBase = getApiBase();
       const labelNames = labels
         .split(",")
         .map((s) => s.trim())
@@ -34,7 +34,7 @@ export default function NewCardPage() {
       // Convert local datetime-local input to ISO string
       const dueIso = dueAt ? new Date(dueAt).toISOString() : null;
 
-      const res = await fetch(`${API_BASE}/cards`, {
+      const res = await fetch(`${apiBase}/cards`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

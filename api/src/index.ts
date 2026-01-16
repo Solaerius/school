@@ -14,9 +14,16 @@ const prisma = new PrismaClient();
 const app = Fastify({ logger: true });
 
 // Single-user behind Tailscale: optional hardening hook.
-// For now we do nothing; later you can restrict by tailnet IP ranges, etc.
-app.addHook("onRequest", async () => {
-  return;
+// For now we allow all origins so the web UI can write to the API.
+app.addHook("onRequest", async (req, reply) => {
+  reply.header("access-control-allow-origin", "*");
+  reply.header("access-control-allow-methods", "GET,POST,PATCH,OPTIONS");
+  reply.header("access-control-allow-headers", "content-type");
+
+  if (req.method === "OPTIONS") {
+    reply.code(204);
+    return reply.send();
+  }
 });
 
 const CardStatusSchema = z.enum([
@@ -137,6 +144,26 @@ app.get("/cards", async (req) => {
   });
 
   return cards;
+});
+
+app.get("/cards/:id", async (req, reply) => {
+  const params = z.object({ id: z.string().uuid() }).parse(req.params);
+
+  const card = await prisma.card.findUnique({
+    where: { id: params.id },
+    include: {
+      checklistItems: { orderBy: { sortOrder: "asc" } },
+      labels: { include: { label: true } },
+      customFields: true,
+    },
+  });
+
+  if (!card) {
+    reply.code(404);
+    return { message: "Card not found" };
+  }
+
+  return card;
 });
 
 app.post("/cards", async (req, reply) => {
