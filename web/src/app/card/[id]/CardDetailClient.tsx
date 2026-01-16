@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import type { Card } from "../../../lib/api";
+
 import { getApiBase } from "../../../lib/apiBase";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3100";
 
 type Props = {
   initialCard: Card;
@@ -27,8 +29,10 @@ export default function CardDetailClient({ initialCard }: Props) {
     const previous = card.status;
     setCard({ ...card, status });
     try {
+
       const apiBase = getApiBase();
       const res = await fetch(`${apiBase}/cards/${card.id}`, {
+      const res = await fetch(`${API_BASE}/cards/${card.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ status }),
