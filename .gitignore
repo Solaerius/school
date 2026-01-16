@@ -1,0 +1,20 @@
+# Node
+**/node_modules/
+**/.next/
+**/dist/
+**/.turbo/
+npm-debug.log*
+yarn-error.log*
+
+# Env / secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# Docker/volumes (local state)
+**/.DS_Store
+
+# Prisma local artifacts
+**/prisma/dev.db

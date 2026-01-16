@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CardStatus {
+  inbox
+  todo
+  in_progress
+  waiting
+  done
+  archived
+}
+
+enum CardSource {
+  manual
+  google_calendar
+}
+
+model Card {
+  id          String      @id @default(uuid())
+  title       String
+  description String      @default("")
+  status      CardStatus  @default(inbox)
+  dueAt       DateTime?
+  startAt     DateTime?
+  priority    Int         @default(0) // 0..3
+  source      CardSource  @default(manual)
+  sourceId    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  checklistItems ChecklistItem[]
+  labels         CardLabel[]
+  customFields   CustomField[]
+
+  @@index([dueAt])
+  @@index([status])
+}
+
+model ChecklistItem {
+  id        String   @id @default(uuid())
+  cardId    String
+  text      String
+  isDone    Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+}
+
+model Label {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String?  // optional later
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cards CardLabel[]
+}
+
+model CardLabel {
+  cardId  String
+  labelId String
+
+  card  Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, labelId])
+}
+
+model CustomField {
+  id        String   @id @default(uuid())
+  cardId    String
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@index([key])
+}
